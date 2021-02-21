@@ -135,9 +135,9 @@ exports.createTableSpares = (array) => {
 }
 
 exports.createTableDecoms = (array) => {
-    let subdivisionsStr = '<table><th>Наименование</th><th>Модель</th><th>Год</th><th>Дата списания</th>';
+    let subdivisionsStr = '<table><th>Наименование</th><th>Модель</th><th>Год</th>';
     let subdivisions = array.map((item) => {
-        return '<tr><td>' + item.name + '</td><td>' + item.model + '</td><td>' + item.year + '</td><td>' + item.date + '</td></tr>';
+        return '<tr><td>' + item.name + '</td><td>' + item.model + '</td><td>' + item.year + '</td></tr>';
     });
     subdivisions.forEach((item) => {
         subdivisionsStr += item;

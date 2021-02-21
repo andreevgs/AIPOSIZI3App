@@ -9,7 +9,7 @@ let indexRouter = require('./routes/index');
 let subdivisionsRouter = require('./routes/subdivisions')
 let repairsRouter = require('./routes/repairs');
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 3000;
 
 app.engine('.hbs', exphbs({
     defaultLayout: 'layout',
@@ -19,7 +19,7 @@ app.engine('.hbs', exphbs({
 app.set('view engine', '.hbs')
 app.set('views', path.join(__dirname, 'views'))
 
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({extended: true}));
 app.use('/public', express.static(__dirname + '/public'));
 
 app.use('/', indexRouter);

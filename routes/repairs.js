@@ -1,16 +1,14 @@
 const express = require('express');
 const router = express();
-const pg = require('pg');
+const axios = require('axios').default;
 const fs = require('fs');
-const DB_ACCESS = require('../config').DB_ACCESS;
+const axiosPOSTconfig = {headers: {'Content-Type': 'application/json'}};
 const createTableEmployees = require('../api/other/HTMLCreators').createTableEmployees;
 const createTableTechnicsRep = require('../api/other/HTMLCreators').createTableTechnicsRep;
 const createTableTechnicsHistory = require('../api/other/HTMLCreators').createTableTechnicsHistory;
 const objWithMaxProperty = require('../api/other/HTMLCreators').objWithMaxProperty;
 const createTableSpares = require('../api/other/HTMLCreators').createTableSpares;
 const createOptionsSparesRep = require('../api/other/HTMLCreators').createOptionsSparesRep;
-
-const pool = new pg.Pool(DB_ACCESS);
 
 router.get('/', (req, res) => {
     res.render('repairs', {
@@ -19,24 +17,20 @@ router.get('/', (req, res) => {
 });
 
 router.get('/employees', (req, res) => {
-    pool.connect((err, client, done) => {
-        if (err) {
-            return console.error('error fetching client from pool', err);
-        }
-        client.query('SELECT * FROM Employees_repair_shop', [], function (err, result) {
-            done();
-            if (err) {
-                return console.error('error happened during query', err);
-            }
+    axios.get('http://localhost:5000/api/repairs/employees')
+        .then((response) => {
+            console.log(response.data.rows);
             console.log('repairs employees is shown');
             fs.appendFileSync(__dirname + '/../logs.txt', 'repairs employees is shown\n');
             res.render('employees', {
                 title: 'Сотрудники ремонтной мастерской',
                 link: '/repairs/employees/add',
-                table: createTableEmployees(result.rows, req.params.id)
+                table: createTableEmployees(response.data.rows, req.params.id)
             });
+        })
+        .catch((error) => {
+            console.log('This error has occured: ', error);
         });
-    });
 });
 
 router.get('/employees/add', (req, res) => {
@@ -46,138 +40,107 @@ router.get('/employees/add', (req, res) => {
 });
 
 router.post('/employees/add', (req, res) => {
-    pool.connect((err, client, done) => {
-        if (err) {
-            return console.error('error fetching client from pool', err);
-        }
-        client.query('INSERT INTO Employees_repair_shop (full_name, age, sex, position) VALUES ($1, $2, $3, $4) RETURNING id', [req.body.name, req.body.age, req.body.sex, req.body.position], function (err, result_emp) {
-            done();
-            if (err) {
-                return console.error('error happened during query', err);
+    axios.post('http://localhost:5000/api/repairs/employees/add', req.body, axiosPOSTconfig)
+        .then((response) => {
+            console.log('respones data: ', response.data);
+            console.log('body data: ', req.body);
+            if(response.data.status){
+                console.log('employees is added');
+                fs.appendFileSync(__dirname + '/../logs.txt', 'employees is added\n');
+                res.redirect('/repairs/employees');
             }
-            console.log('employee is added');
-            fs.appendFileSync(__dirname + '/../logs.txt', 'employee is added\n');
-            res.redirect('/repairs/employees');
+        })
+        .catch((error) => {
+            console.log('This error has occured: ', error);
         });
-    });
 });
 
 router.get('/spares', (req, res) => {
-    pool.connect((err, client, done) => {
-        if (err) {
-            return console.error('error fetching client from pool', err);
-        }
-        client.query('SELECT name, cost, date, repairs_id FROM Spares', [], function (err, result) {
-            done();
-            if (err) {
-                return console.error('error happened during query', err);
-            }
+    axios.get('http://localhost:5000/api/repairs/spares')
+        .then((response) => {
+            console.log(response.data.rows);
             console.log('spares is shown');
             fs.appendFileSync(__dirname + '/../logs.txt', 'spares is shown\n');
-            
             res.render('spares', {
                 title: 'Запчасти',
-                table: createTableSpares(result.rows)
+                table: createTableSpares(response.data.rows)
             });
+        })
+        .catch((error) => {
+            console.log('This error has occured: ', error);
         });
-    });
 });
 
 router.get('/spares/add', (req, res) => {
-    pool.connect((err, client, done) => {
-        if (err) {
-            return console.error('error fetching client from pool', err);
-        }
-        client.query('SELECT id FROM Repairs WHERE is_done=0', [], function (err, result) {
-            done();
-            if (err) {
-                return console.error('error happened during query', err);
-            }
-            
+    axios.get('http://localhost:5000/api/repairs/spares/add')
+        .then((response) => {
+            console.log('spares/add', response.data.rows);
             res.render('add_spare', {
                 title: 'Добавить запчасть',
-                repairs: createOptionsSparesRep(result.rows)
+                repairs: createOptionsSparesRep(response.data.rows)
             });
+        })
+        .catch((error) => {
+            console.log('This error has occured: ', error);
         });
-    });
 });
 
 router.post('/spares/add', (req, res) => {
-    pool.connect((err, client, done) => {
-        if (err) {
-            return console.error('error fetching client from pool', err);
-        }
-        client.query('INSERT INTO Spares (name, cost, repairs_id, date) VALUES ($1, $2, $3, NOW())', [req.body.name, req.body.cost, req.body.repairs_id], function (err, result_spare) {
-            done();
-            if (err) {
-                return console.error('error happened during query', err);
+    axios.post('http://localhost:5000/api/repairs/spares/add', req.body, axiosPOSTconfig)
+        .then((response) => {
+            console.log('respones data: ', response.data);
+            console.log('body data: ', req.body);
+            if(response.data.status){
+                console.log('spare is added');
+                fs.appendFileSync(__dirname + '/../logs.txt', 'spare is added\n');
+                res.redirect('/repairs/spares');
             }
-            console.log('spare is added');
-            fs.appendFileSync(__dirname + '/../logs.txt', 'spare is added\n');
-            res.redirect('/repairs/spares');
-
+        })
+        .catch((error) => {
+            console.log('This error has occured: ', error);
         });
-    });
 });
 
 router.get('/technics', (req, res) => {
-    pool.connect((err, client, done) => {
-        if (err) {
-            return console.error('error fetching client from pool', err);
-        }
-        client.query('SELECT MAX(Subdivisions.name) AS Name, MAX(Repairs.subdivision_id) AS Subdivision_id, COUNT(Repairs.subdivision_id) AS Count FROM Repairs JOIN Subdivisions ON Subdivisions.id = Repairs.subdivision_id GROUP BY (Repairs.subdivision_id)', [], function (err, result_max) {
-            if (err) {
-                return console.error('error happened during query', err);
-            }
-            client.query('SELECT Technics.name, Technics.model, Repairs.id, Repairs.date_of_hand_over_for_repair, Repairs.type_of_repair, Repairs.repair_time, Repairs.technics_id FROM Technics JOIN Repairs ON Repairs.technics_id = Technics.id WHERE Repairs.is_done=0', [], function (err, result) {
-                done();
-                if (err) {
-                    return console.error('error happened during query', err);
-                }
-                res.render('repairs_technics', {
-                    title: 'Техника в ремонте',
-                    subdivision_name: objWithMaxProperty(result_max.rows),
-                    table: createTableTechnicsRep(result.rows)
-                });
+    axios.get('http://localhost:5000/api/repairs/technics')
+        .then((response) => {
+            console.log('spares/add', response.data.result.rows);
+            res.render('repairs_technics', {
+                title: 'Техника в ремонте',
+                subdivision_name: objWithMaxProperty(response.data.result_max.rows),
+                table: createTableTechnicsRep(response.data.result.rows)
             });
+        })
+        .catch((error) => {
+            console.log('This error has occured: ', error);
         });
-    });
 });
 
 router.get('/technics/:id/history', (req, res) => {
-    pool.connect((err, client, done) => {
-        if (err) {
-            return console.error('error fetching client from pool', err);
-        }
-        client.query('SELECT Technics.name, Technics.model, Subdivisions.name AS subdivision_name, Affilation_of_technics.date FROM Affilation_of_technics JOIN Technics ON Affilation_of_technics.technics_id = Technics.id JOIN Subdivisions ON Affilation_of_technics.subdivision_id = Subdivisions.id WHERE Affilation_of_technics.technics_id=$1 ORDER BY (Affilation_of_technics.date)', [req.params.id], function (err, result_techs) {
-            done();
-            if (err) {
-                return console.error('error happened during query', err);
-            }
-
+    axios.get('http://localhost:5000/api/repairs/technics/' + req.params.id + '/history')
+        .then((response) => {
             console.log('history of moves is shown');
             fs.appendFileSync(__dirname + '/../logs.txt', 'history of moves is shown\n');
             res.render('technics_history', {
                 title: 'История перемещений',
-                table: createTableTechnicsHistory(result_techs.rows)
+                table: createTableTechnicsHistory(response.data.rows)
             });
+        })
+        .catch((error) => {
+            console.log('This error has occured: ', error);
         });
-    });
 });
 
 router.get('/technics/:id/done', (req, res) => {
-    pool.connect((err, client, done) => {
-        if (err) {
-            return console.error('error fetching client from pool', err);
-        }
-        client.query('UPDATE Repairs SET is_done=1 WHERE technics_id=$1', [req.params.id], function (err, result_techs) {
-            done();
-            if (err) {
-                return console.error('error happened during query', err);
+    axios.get('http://localhost:5000/api/repairs/technics/' + req.params.id + '/done')
+        .then((response) => {
+            if(response.data.status){
+                res.redirect('/repairs/technics');
             }
-            res.redirect('/repairs/technics');
+        })
+        .catch((error) => {
+            console.log('This error has occured: ', error);
         });
-    });
 });
 
 module.exports = router;
