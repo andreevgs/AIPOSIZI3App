@@ -1,0 +1,19 @@
+<form method="POST">
+    <p>Укажите сотрудника, который сдал технику:</p>
+    <select name="employee_id_who_gave">
+        {{{employee_who_gave}}}
+    </select>
+    <p>Укажите сотрудника, который принял технику:</p>
+    <select name="employee_id_who_accepted">
+        {{{employee_who_accepted}}}
+    </select>
+    <p>Укажите сотрудника, который будет выполнять ремонт:</p>
+    <select name="employee_id_who_repair">
+        {{{employee_who_repair}}}
+    </select>
+    <p>Укажите срок ремонта (дней):</p>
+    <input type="number" name="repair_time">
+    <p>Тип ремонта:</p>
+    <input type="text" name="type_of_repair">
+    <input type="submit">
+</form>
